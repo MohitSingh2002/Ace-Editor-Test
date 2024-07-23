@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ace Editor with Language Selection and Autocomplete</title>
+    <style>
+        #editor {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="editor">function foo(items) {
+        var x = "All this is syntax highlighted";
+        return x;
+    }</div>
+
+    <!-- Include Ace library and extensions -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ext-language_tools.js"></script>
+
+    <script>
+        // Initialize Ace Editor
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/javascript");
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true
+        });
+
+        // Custom Completer
+        var langTools = ace.require("ace/ext/language_tools");
+        var customCompleter = {
+            getCompletions: function(editor, session, pos, prefix, callback) {
+                var wordList = {
+                    "javascript": ["function", "var", "let", "const", "console", "log"],
+                    "java": ["public", "class", "void", "static", "import", "new", "String", "int", "System", "out", "println"],
+                    "c_cpp": ["#include", "int", "printf", "cout", "cin", "std", "namespace"],
+                    "dart": ["import", "void", "class", "new", "String", "int", "print"]
+                };
+                var lang = editor.session.getMode().$id.split("/").pop();
+                callback(null, (wordList[lang] || []).map(function(word) {
+                    return {
+                        caption: word,
+                        value: word,
+                        meta: "custom"
+                    };
+                }));
+            }
+        };
+        langTools.addCompleter(customCompleter);
+
+        // Function to get URL parameters
+        function getURLParameter(name) {
+            return new URLSearchParams(window.location.search).get(name);
+        }
+
+        // Set the initial language based on URL parameter
+        window.onload = function() {
+            let language = getURLParameter('language');
+            let theme = getURLParameter('theme');
+            console.log(`${language} ${theme}`);
+            if (language) {
+                editor.session.setMode("ace/mode/" + language);
+            }
+            if (theme) {
+                editor.setTheme("ace/theme/" + theme);
+            }
+        };
+    </script>
+</body>
+</html>
